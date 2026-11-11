@@ -28,8 +28,7 @@ The lab simulates authentication attacks from Kali Linux against an Ubuntu SSH s
 
 ## Network Architecture
 
-*Network topology diagram will be added here.*
-
+![Lab Network Topology](Lab-Architecture/network-topology.png)
 ## Attack Simulation
 
 ### 1. SSH Brute Force
