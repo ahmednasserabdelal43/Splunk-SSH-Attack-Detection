@@ -1,7 +1,5 @@
 # SSH Brute Force & Password Spraying Detection Using Splunk
 
-**بسم الله الرحمن الرحيم**
-
 ## 1. Project Overview
 
 Authentication attacks are among the common techniques used to gain unauthorized access to systems.
