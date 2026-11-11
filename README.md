@@ -152,6 +152,7 @@ index=main sourcetype=linux_secure ("Failed password" OR "Accepted password")
         by src_ip user
 | where failures >= 3 AND successes >= 1
 ```
+![Failed Attempts Followed by Successful](Lab-Architecture/Failed Attempts Followed by Successful.png)
 
 ### 8.4 SSH Authentication Timeline
 
