@@ -1,0 +1,6 @@
+index=main sourcetype=linux_secure ("Failed password" OR "Accepted password")
+| rex field=_raw "(?:Failed|Accepted) password for (?:invalid user )?(?<user>\S+) from (?<src_ip>\d+\.\d+\.\d+\.\d+)"
+| stats count(eval(searchmatch("Failed password"))) AS failures
+        count(eval(searchmatch("Accepted password"))) AS successes
+        by src_ip user
+| where failures >= 3 AND successes >= 1
