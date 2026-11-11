@@ -1,6 +1,5 @@
 # SSH Brute Force & Password Spraying Detection Using Splunk
 
-**بسم الله الرحمن الرحيم**
 
 ## 1. Project Overview
 
