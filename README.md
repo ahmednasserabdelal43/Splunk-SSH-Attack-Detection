@@ -1,83 +1,245 @@
-# Detecting SSH Brute Force & Password Spraying with Splunk
+# SSH Brute Force & Password Spraying Detection Using Splunk
 
-## Project Overview
+**بسم الله الرحمن الرحيم**
 
-This project demonstrates a practical Security Operations Center (SOC) lab focused on detecting SSH Brute Force and Password Spraying attacks using Splunk Enterprise.
+## 1. Project Overview
 
-The lab simulates authentication attacks from Kali Linux against an Ubuntu SSH server, collects authentication logs using Splunk Universal Forwarder, and analyzes the events to identify suspicious activities and generate security alerts.
+Authentication attacks are among the common techniques used to gain unauthorized access to systems.
 
-## Lab Objectives
+In this project, I built a small SOC monitoring environment to simulate SSH login attacks, collect authentication logs, and investigate suspicious activities using Splunk Enterprise.
 
-- Simulate SSH Brute Force attacks.
-- Simulate SSH Password Spraying attacks.
-- Collect and forward Linux authentication logs to Splunk.
-- Analyze SSH authentication events using Splunk Search Processing Language (SPL).
-- Build detection queries for suspicious authentication behavior.
-- Configure scheduled alerts for attack detection.
+The main focus is to understand how repeated login failures appear in Linux logs and how detection rules can help security analysts identify potentially compromised accounts.
 
-## Lab Environment
+## 2. Attack Techniques
 
-| Component | Role |
+This lab covers two authentication attack scenarios:
+
+| Brute Force | Password Spraying |
 |---|---|
-| Kali Linux | Attacker |
-| Ubuntu Linux | SSH Target |
-| Windows | Splunk Enterprise SIEM |
-| Splunk Universal Forwarder | Log Collection & Forwarding |
-| Hydra | Attack Simulation |
-| Splunk SPL | Detection & Analysis |
+| Multiple passwords against one account | One password against multiple accounts |
+| Focuses on compromising a specific user | Looks for weak passwords across different users |
+| Often generates repeated failures for one username | Distributes failures across several usernames |
 
-## Network Architecture
+## 3. Lab Environment
 
-![Lab Network Topology](Lab-Architecture/network-topology.png)
-## Attack Simulation
+The environment contains three virtual machines connected through a virtual network.
 
-### 1. SSH Brute Force
+| System | IP Address | Purpose |
+|---|---|---|
+| Kali Linux | `192.168.43.128` | Attack simulation |
+| Ubuntu Linux | `192.168.43.129` | SSH server and log source |
+| Windows | `192.168.43.1` | Splunk Enterprise |
 
-A controlled SSH Brute Force simulation was performed from Kali Linux against the Ubuntu SSH server using Hydra.
-
-### 2. SSH Password Spraying
-
-A controlled Password Spraying simulation was performed using a single password against multiple dedicated test accounts.
-
-## Log Collection
-
-Ubuntu authentication logs were collected from:
-
-`/var/log/auth.log`
-
-Splunk Universal Forwarder forwarded the logs to Splunk Enterprise using TCP port `9997`.
-
-## Detection & Analysis
-
-The lab includes detection logic for:
-
-- SSH Brute Force attacks.
-- SSH Password Spraying.
-- Failed authentication followed by successful login.
-
-## Alerting
-
-Scheduled Splunk alerts were configured to identify suspicious SSH authentication activity.
-
-## Results
-
-The lab successfully demonstrated:
-
-- Centralized collection of Ubuntu SSH authentication logs.
-- Identification of repeated failed login attempts.
-- Detection of suspicious source IP activity.
-- Successful triggering of Splunk security alerts.
-
-## Tools & Technologies
-
-- Splunk Enterprise
-- Splunk Universal Forwarder
+**Technologies used:**
 - Kali Linux
 - Ubuntu Linux
+- Windows
+- Splunk Enterprise
+- Splunk Universal Forwarder
 - Hydra
-- SSH
-- SPL
+- OpenSSH
 
-## Disclaimer
+## 4. Network Architecture
 
-This project was conducted in a controlled lab environment using systems and accounts created for educational and defensive security testing purposes.
+The attack traffic originates from Kali Linux and targets the SSH service running on Ubuntu.
+
+Authentication logs are collected on Ubuntu and forwarded to Splunk Enterprise for investigation.
+
+![Lab Network Topology](Lab-Architecture/network-topology.png)
+
+**Log forwarding configuration:**
+- Destination: `192.168.43.1`
+- Port: `9997/TCP`
+- Log file: `/var/log/auth.log`
+
+## 5. Attack Simulation
+
+### Scenario 1: SSH Brute Force
+
+Hydra was used from Kali Linux to generate repeated SSH authentication attempts against a lab account on Ubuntu.
+
+Example command:
+
+```bash
+hydra -l labuser -P passwords.txt -t 1 -W 3 ssh://192.168.43.129
+```
+
+The objective was to generate authentication failures and examine how they are recorded in the target system.
+
+### Scenario 2: SSH Password Spraying
+
+The second scenario targets multiple dedicated test accounts using the same password.
+
+Example command:
+
+```bash
+hydra -L users.txt -p 'SprayTest2026!' -t 1 -W 3 ssh://192.168.43.129
+```
+
+This allows us to compare the log patterns generated by both attack techniques.
+
+*All simulations were performed against systems and accounts dedicated to this lab.*
+
+## 6. Understanding Linux Authentication Logs
+
+Ubuntu stores SSH authentication activity in:
+
+```text
+/var/log/auth.log
+```
+
+Two important message patterns are:
+
+**Failed login:**
+
+```text
+Failed password for ahmed from 192.168.43.128 port 55548 ssh2
+```
+
+**Successful login:**
+
+```text
+Accepted password for ahmed from 192.168.43.128 port 37564 ssh2
+```
+
+These messages provide useful investigation fields:
+
+- Username being accessed.
+- Source IP address.
+- Authentication result.
+- SSH connection details.
+
+Unlike Windows Security logs, Linux SSH authentication events are identified through log messages rather than Windows Event IDs such as 4624 and 4625.
+
+## 7. Log Collection in Splunk
+
+Splunk Universal Forwarder was installed on Ubuntu to send authentication events to the Windows Splunk Enterprise instance.
+
+| Configuration | Value |
+|---|---|
+| Index | `main` |
+| Sourcetype | `linux_secure` |
+| Source | `/var/log/auth.log` |
+| Forwarding Port | `9997` |
+
+### Data Ingestion Evidence
+
+![Splunk Data Ingestion](Screenshots/data-ingestion.png)
+
+## 8. Detection Engineering with SPL
+
+The following searches were developed to investigate suspicious SSH authentication activity.
+
+### Detection 1: Repeated SSH Authentication Failures
+
+This search groups failed login events by source IP and identifies repeated attempts.
+
+```spl
+index=main sourcetype=linux_secure "Failed password"
+| rex field=_raw "Failed password for (?:invalid user )?(?<target_user>\S+) from (?<source_ip>\d+\.\d+\.\d+\.\d+)"
+| stats count AS failed_attempts values(target_user) AS targeted_users by source_ip
+| where failed_attempts >= 3
+| sort -failed_attempts
+```
+
+**Observed result:**
+
+| Field | Value |
+|---|---|
+| Source IP | `192.168.43.128` |
+| Targeted Account | `ahmed` |
+| Failed Events Returned | `4` |
+
+The search identified repeated failed authentication activity originating from the Kali machine.
+
+### Brute Force Detection Evidence
+
+![Brute Force Detection](Screenshots/brute-force-detection.png)
+
+### Detection 2: Multiple Accounts Targeted by One Source
+
+Password Spraying can be investigated by counting the distinct usernames associated with each source IP.
+
+```spl
+index=main sourcetype=linux_secure "Failed password"
+| rex "Failed password for (?:invalid user )?(?<user>\S+) from (?<src_ip>\d+\.\d+\.\d+\.\d+)"
+| stats dc(user) AS unique_users values(user) AS users count AS failures by src_ip
+| where unique_users >= 2
+```
+
+The search highlights source addresses associated with failed authentication attempts against multiple accounts.
+
+### Password Spraying Evidence
+
+![Password Spraying Detection](Screenshots/password-spraying-detection.png)
+
+### Detection 3: Failed Attempts Followed by a Successful Login
+
+A successful authentication after several failures deserves further investigation.
+
+```spl
+index=main sourcetype=linux_secure ("Failed password" OR "Accepted password")
+| rex field=_raw "(?:Failed|Accepted) password for (?:invalid user )?(?<user>\S+) from (?<src_ip>\d+\.\d+\.\d+\.\d+)"
+| stats count(eval(searchmatch("Failed password"))) AS failures
+        count(eval(searchmatch("Accepted password"))) AS successes
+        by src_ip user
+| where failures >= 3 AND successes >= 1
+```
+
+This correlation helps identify accounts that experienced repeated failures and subsequently authenticated successfully.
+
+### Detection 4: SSH Attack Activity Over Time
+
+A time-based visualization helps analysts understand when authentication failures occurred.
+
+```spl
+index=main sourcetype=linux_secure "Failed password"
+| timechart span=1m count
+```
+
+A concentration of failed authentication events within a short period may indicate suspicious activity.
+
+## 9. Automated Alerting
+
+A scheduled alert was configured in Splunk to monitor the Brute Force detection search.
+
+**Alert configuration:**
+
+- Name: `SSH Brute Force Detection`
+- Execution: Scheduled
+- Schedule: Every 5 minutes
+- Trigger condition: Number of Results greater than 0
+- Severity: High
+
+The alert notification confirmed that the configured detection condition was triggered.
+
+### Alert Notification Evidence
+
+![Splunk Alert Triggered](Screenshots/alert-triggered.png)
+
+## 10. Investigation Findings
+
+During the lab, Splunk provided visibility into SSH authentication activity, including:
+
+- Repeated failed authentication messages.
+- Source IP identification.
+- Targeted account identification.
+- Successful SSH authentication events.
+- Detection searches and scheduled alert notifications.
+
+The observed source address `192.168.43.128` matched the Kali Linux machine in the lab network.
+
+## 11. Skills Demonstrated
+
+- Linux authentication log analysis.
+- SIEM log ingestion and monitoring.
+- Splunk Search Processing Language (SPL).
+- SSH attack simulation with Hydra.
+- Brute Force detection.
+- Password Spraying detection logic.
+- Correlation of failed and successful authentication.
+- Scheduled alert configuration.
+
+## 12. Disclaimer
+
+This environment was created strictly for educational and defensive cybersecurity purposes. All attack simulations were restricted to the virtual machines and test accounts used in this lab.
