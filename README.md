@@ -307,15 +307,22 @@ The observed attacker address was `192.168.43.128`, matching the Kali Linux mach
 
 ## 11. Skills Demonstrated
 
-- SOC Monitoring & Investigation
-- SIEM Log Collection
-- Linux Authentication Analysis
-- Splunk Enterprise
-- Splunk Search Processing Language (SPL)
-- SSH Attack Simulation
-- Brute Force Detection
+- SOC Monitoring & Incident Investigation
+- SIEM Log Collection and Analysis
+- Linux Authentication Log Analysis
+- Splunk Enterprise & Search Processing Language (SPL)
+- SSH Attack Simulation and Detection
+- SSH Brute Force Detection
 - Password Spraying Detection
 - Security Alert Configuration
+- Python-Based SOAR Development
+- Flask Webhook Integration
+- VirusTotal API Integration & Threat Intelligence Enrichment
+- IP Address Validation and Classification
+- Incident Risk Classification
+- Incident Management & Analyst Approval Workflow
+- SQLite Database Management
+- Security Automation and Workflow Development
 
 ## 12. Disclaimer
 
