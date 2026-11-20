@@ -255,7 +255,6 @@ The dashboard displays:
 
 Analysts can review pending incidents and choose to approve or reject them.
 
-The current approval workflow records the analyst's decision. Automated blocking or remediation actions have not yet been configured.
 
 ![result](Lab-Architecture/Python-SOAR-Approval-Dashboard.png)
 
