@@ -199,8 +199,6 @@ The implemented workflow consists of the following stages:
 4. Risk Classification and Incident Creation.
 5. Human Approval through a web-based dashboard.
 
-**[Image Placeholder: Python SOAR Architecture / Workflow Diagram]**
-
 ### 10.3 IP Address Validation
 
 The first stage validates the source IP address and determines whether it is a private or public IP.
@@ -210,7 +208,7 @@ The first stage validates the source IP address and determines whether it is a p
 
 Private IP addresses are not automatically considered safe. They can still trigger high-risk incidents based on the detected attack behavior.
 
-**[Image Placeholder: IP Validation Code or Private IP Test Result]**
+![private ip](Lab-Architecture/privateip.png)
 
 ### 10.4 VirusTotal Threat Intelligence Integration
 
@@ -225,7 +223,7 @@ The enrichment process extracts:
 
 The returned intelligence is used as an additional input for incident risk classification.
 
-**[Image Placeholder: VirusTotal API Response / Enrichment Result]**
+![incident result](Lab-Architecture/incidentclassificationresult.png)
 
 ### 10.5 Incident Classification
 
@@ -239,7 +237,7 @@ After event processing and enrichment, the system evaluates the available inform
 
 High-risk and medium-risk incidents are submitted for human review, while low-risk events are retained for monitoring.
 
-**[Image Placeholder: Incident Classification Result]**
+![incident result](Lab-Architecture/incidentclassificationresult.png)
 
 ### 10.6 Incident Approval Dashboard
 
@@ -259,7 +257,7 @@ Analysts can review pending incidents and choose to approve or reject them.
 
 The current approval workflow records the analyst's decision. Automated blocking or remediation actions have not yet been configured.
 
-**[Image Placeholder: Python SOAR Approval Dashboard]**
+![result](Lab-Architecture/Python-SOAR-Approval-Dashboard)
 
 ### 10.7 Database and Incident Management
 
@@ -274,8 +272,7 @@ SQLite is used to persist incident records, including:
 
 This allows incidents to remain available in the dashboard after restarting the application.
 
-**[Image Placeholder: SQLite Incident Records]**
-
+ 
 ### 10.8 Testing and Validation
 
 The Python SOAR workflow was tested using representative security events based on the SSH Brute Force and Password Spraying scenarios documented in this project.
@@ -288,10 +285,9 @@ Testing covered:
 4. Incident storage in SQLite.
 5. Human approval and rejection.
 
-The Flask webhook accepts Splunk-compatible event payloads. During the current testing phase, representative events were submitted directly to the webhook to validate the processing pipeline.
+ The webhook was tested by sending security event payloads directly to the Flask endpoint, validating event ingestion, IP enrichment, risk classification, and incident creation.
 
-**[Image Placeholder: Webhook Test Results / PowerShell Response]**
-
+ 
 ## 10. Investigation Results
 
 The lab demonstrated the following capabilities:
