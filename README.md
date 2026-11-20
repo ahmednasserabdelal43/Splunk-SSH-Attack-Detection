@@ -223,7 +223,7 @@ The enrichment process extracts:
 
 The returned intelligence is used as an additional input for incident risk classification.
 
-![incident result](Lab-Architecture/incidentclassificationresult.png)
+![Incident Classification Result](Lab-Architecture/Incident-Classification-Result.png)
 
 ### 10.5 Incident Classification
 
@@ -237,7 +237,7 @@ After event processing and enrichment, the system evaluates the available inform
 
 High-risk and medium-risk incidents are submitted for human review, while low-risk events are retained for monitoring.
 
-![incident result](Lab-Architecture/incidentclassificationresult.png)
+![Incident Classification Result](Lab-Architecture/Incident-Classification-Result.png)
 
 ### 10.6 Incident Approval Dashboard
 
