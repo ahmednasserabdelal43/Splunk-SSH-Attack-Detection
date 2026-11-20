@@ -179,6 +179,119 @@ The alert condition was successfully triggered during the lab.
 
 ![Splunk Alert Triggered](Lab-Architecture/alert-triggered.png)
 
+## 10. Python-Based SOAR Integration
+
+### 10.1 Motivation
+
+During the implementation of the SOAR automation phase, deploying and configuring a dedicated SOAR platform introduced several challenges due to the available hardware resources, limited development time, and the complexity of the configuration and troubleshooting process.
+
+To overcome these limitations and continue developing the automation workflow, I decided to build a lightweight Python-based SOAR solution using Flask and SQLite.
+
+The solution uses a Flask Webhook to receive security events in a Splunk-compatible JSON format, integrates with VirusTotal for threat intelligence enrichment, and provides an Incident Approval Dashboard for analyst review.
+
+### 10.2 SOAR Architecture
+
+The implemented workflow consists of the following stages:
+
+1. Security Event Ingestion through a Flask Webhook.
+2. IP Address Validation and Classification.
+3. Threat Intelligence Enrichment using VirusTotal.
+4. Risk Classification and Incident Creation.
+5. Human Approval through a web-based dashboard.
+
+**[Image Placeholder: Python SOAR Architecture / Workflow Diagram]**
+
+### 10.3 IP Address Validation
+
+The first stage validates the source IP address and determines whether it is a private or public IP.
+
+- **Private IP Address:** Identified as an internal address. VirusTotal enrichment is skipped because private lab addresses are not publicly routable.
+- **Public IP Address:** Forwarded to VirusTotal for threat intelligence analysis.
+
+Private IP addresses are not automatically considered safe. They can still trigger high-risk incidents based on the detected attack behavior.
+
+**[Image Placeholder: IP Validation Code or Private IP Test Result]**
+
+### 10.4 VirusTotal Threat Intelligence Integration
+
+For public IP addresses, the Python SOAR engine communicates with the VirusTotal API to retrieve IP reputation information.
+
+The enrichment process extracts:
+
+- Malicious detections.
+- Suspicious detections.
+- Harmless detections.
+- Undetected results.
+
+The returned intelligence is used as an additional input for incident risk classification.
+
+**[Image Placeholder: VirusTotal API Response / Enrichment Result]**
+
+### 10.5 Incident Classification
+
+After event processing and enrichment, the system evaluates the available information and assigns a risk level.
+
+| Risk Level | Description |
+|---|---|
+| High Risk | Multiple failed login attempts, password spraying indicators, or malicious IP reputation. |
+| Medium Risk | Suspicious threat intelligence findings. |
+| Low or Unknown Risk | No significant malicious indicators identified. |
+
+High-risk and medium-risk incidents are submitted for human review, while low-risk events are retained for monitoring.
+
+**[Image Placeholder: Incident Classification Result]**
+
+### 10.6 Incident Approval Dashboard
+
+A Flask-based web dashboard was developed to provide centralized incident visibility and analyst interaction.
+
+The dashboard displays:
+
+- Incident ID and alert name.
+- Source IP address.
+- Number of failed attempts.
+- Targeted usernames.
+- VirusTotal verdict.
+- Risk classification.
+- Incident timestamp and status.
+
+Analysts can review pending incidents and choose to approve or reject them.
+
+The current approval workflow records the analyst's decision. Automated blocking or remediation actions have not yet been configured.
+
+**[Image Placeholder: Python SOAR Approval Dashboard]**
+
+### 10.7 Database and Incident Management
+
+SQLite is used to persist incident records, including:
+
+- Event details.
+- Source IP addresses.
+- Threat intelligence results.
+- Risk decisions.
+- Approval status.
+- Analyst response actions.
+
+This allows incidents to remain available in the dashboard after restarting the application.
+
+**[Image Placeholder: SQLite Incident Records]**
+
+### 10.8 Testing and Validation
+
+The Python SOAR workflow was tested using representative security events based on the SSH Brute Force and Password Spraying scenarios documented in this project.
+
+Testing covered:
+
+1. Private IP validation and VirusTotal bypass.
+2. Public IP threat intelligence enrichment.
+3. High-risk incident classification.
+4. Incident storage in SQLite.
+5. Human approval and rejection.
+
+The Flask webhook accepts Splunk-compatible event payloads. During the current testing phase, representative events were submitted directly to the webhook to validate the processing pipeline.
+
+**[Image Placeholder: Webhook Test Results / PowerShell Response]**
+
 ## 10. Investigation Results
 
 The lab demonstrated the following capabilities:
